@@ -71,13 +71,13 @@ typedef struct
 typedef struct
 {
 	/// <summary> 2 = Cockpit, 3 = External/Chase 4 = Drone, 5 = Fixed on Plane, 6 = Environment, 8 = Showcase, 9 = Drone Plane </summary>
-	int State;
+	double State;
 
 	/// <summary> This can be used to reset the cockpit camera when the CAMERA_STATE is set to 2 (Cockpit) </summary>
-	UINT8 Reset;
+	double Reset;
 
 	/// <summary> Sets the zoom/FOV modifier for the cockpit camera. </summary>
-	UINT8 Zoom;
+	double Zoom;
 
 }SimSetCockpitCameraMessage;
 

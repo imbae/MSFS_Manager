@@ -310,10 +310,6 @@ void MSFS_Manager::SendCockpitCameraToSim(SimSetCockpitCameraMessage data)
 	HRESULT hr;
 
 	hr = SimConnect_SetDataOnSimObject(currentPtr->hSimConnect, DEFINE_COCKPIT_CAMERA, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(data), &data);
-
-	printf("Cockpit State: %d\t", data.State);
-	printf("Reset: %d\t", data.Reset);
-	printf("Zoom: %d\n", data.Zoom);
 }
 
 void MSFS_Manager::SimConnectException(DWORD id)
