@@ -29,6 +29,7 @@ constexpr auto SYNC_BYTE = 'G';
 constexpr auto PACKET_HEADER_LENTH = 4;
 constexpr auto PACKET_TAIL_LENTH = 2;
 
+
 typedef struct
 {
 	/// <summary> Latitude of aircraft, North is positive, South negative (Radians) </summary>
@@ -51,14 +52,42 @@ typedef struct
 
 	// <summary> True airspeed (Knots) </summary>
 	double Airspeed;
-}StructPlanePosition;
 
+}SimAircraftMessage;
+
+typedef struct
+{
+	/// <summary> deg </summary>
+	float Pitch;
+
+	/// <summary> deg </summary>
+	float Bank;
+
+	/// <summary> deg </summary>
+	float Heading;
+
+}SimCameraMessage;
+
+typedef struct
+{
+	/// <summary> 2 = Cockpit, 3 = External/Chase 4 = Drone, 5 = Fixed on Plane, 6 = Environment, 8 = Showcase, 9 = Drone Plane </summary>
+	int State;
+
+	/// <summary> This can be used to reset the cockpit camera when the CAMERA_STATE is set to 2 (Cockpit) </summary>
+	UINT8 Reset;
+
+	/// <summary> Sets the zoom/FOV modifier for the cockpit camera. </summary>
+	UINT8 Zoom;
+
+}SimSetCockpitCameraMessage;
 
 union Payload
 {
 	BYTE Data[MAX_BUF_SIZE];
 
-	StructPlanePosition PlanePos;
+	SimAircraftMessage Aircraft;
+	SimCameraMessage Camera;
+	SimSetCockpitCameraMessage CockpitCamera;
 };
 
 enum GROUP_ID {
@@ -79,10 +108,18 @@ enum EVENT_ID {
 enum DATA_DEFINE_ID {
 	DEFINE_INIT_POSITION,
 	DEFINE_PLANE_POSITION,
-	DEFINE_CAMERA_POSITION
+	DEFINE_COCKPIT_CAMERA
 };
 
 enum DATA_REQUEST_ID {
+	SIM_AIRCRAFT = 0,
+	SIM_CAMERA,
+
+	SIM_INIT_HOME_POSITION,
+	SIM_SET_COCKPIT_CAMERA
+};
+
+enum MESSAGE_ID {
 	REQUEST_PLANE_POSITION
 };
 
@@ -109,7 +146,9 @@ public:
 	void InitSimConnect();
 	static void DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext);
 	static void SimConnectDispatch();
-	static void SendPlanePositionToSim(StructPlanePosition);
+	static void SendPlanePositionToSim(SimAircraftMessage);
+	static void SendCameraPositionToSim(SimCameraMessage);
+	static void SendCockpitCameraToSim(SimSetCockpitCameraMessage);
 	static void SimConnectException(DWORD id);
 	HANDLE  hSimConnect;
 	HRESULT hr;	

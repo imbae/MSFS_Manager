@@ -91,10 +91,14 @@ void MSFS_Manager::ReceivedFromClient()
 		{
 			switch (messageID)
 			{
-			case 0:
-				SendPlanePositionToSim(currentPtr->payload.PlanePos);
+			case (int)SIM_AIRCRAFT:
+				SendPlanePositionToSim(currentPtr->payload.Aircraft);
 				break;
-			case 1:
+			case (int)SIM_CAMERA:
+				SendCameraPositionToSim(currentPtr->payload.Camera);
+				break;
+			case (int)SIM_SET_COCKPIT_CAMERA:
+				SendCockpitCameraToSim(currentPtr->payload.CockpitCamera);
 				break;
 			default:
 				break;
@@ -144,8 +148,9 @@ void MSFS_Manager::InitSimConnect()
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_POSITION, "PLANE HEADING DEGREES MAGNETIC", "radians");
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_POSITION, "AIRSPEED TRUE", "knots");
 
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_CAMERA_POSITION, "CAMERA GAMEPLAY PITCH YAW:0", "radians");
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_CAMERA_POSITION, "CAMERA GAMEPLAY PITCH YAW:1", "radians");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_COCKPIT_CAMERA, "CAMERA STATE", "enum");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_COCKPIT_CAMERA, "CAMERA ACTION COCKPIT VIEW RESET", "bool");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_COCKPIT_CAMERA, "COCKPIT CAMERA ZOOM", "percentage");
 
 		// Request a simulation start event
 		hr = SimConnect_SubscribeToSystemEvent(hSimConnect, EVENT_SIM_START, "SimStart");
@@ -221,8 +226,6 @@ void MSFS_Manager::DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pC
 			Init.Altitude = 1050.0;
 			Init.Latitude = 34.611049;
 			Init.Longitude = 127.206115;
-			/*Init.Latitude = 35.021410;
-			Init.Longitude = 128.388953;*/
 			Init.Pitch = 0.0;
 			Init.Bank = 0.0;
 			Init.Heading = 180.0;
@@ -263,7 +266,7 @@ void MSFS_Manager::DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pC
 		case REQUEST_PLANE_POSITION:
 		{
 			DWORD ObjectID = pObjData->dwObjectID;
-			StructPlanePosition* pS = (StructPlanePosition*)&pObjData->dwData;
+			SimAircraftMessage* pS = (SimAircraftMessage*)&pObjData->dwData;
 
 			printf("Lat=%f  Lon=%f  Alt=%f\n", pS->Latitude, pS->Longitude, pS->Altitude);
 			printf("Pitch=%f  Bank=%f  Heading=%f\n", pS->Pitch, pS->Bank, pS->Heading);
@@ -284,7 +287,7 @@ void MSFS_Manager::DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pC
 }
 
 
-void MSFS_Manager::SendPlanePositionToSim(StructPlanePosition data)
+void MSFS_Manager::SendPlanePositionToSim(SimAircraftMessage data)
 {
 	HRESULT hr;
 
@@ -295,11 +298,23 @@ void MSFS_Manager::SendPlanePositionToSim(StructPlanePosition data)
 	//hr = SimConnect_RequestDataOnSimObject(currentPtr->hSimConnect, REQUEST_PLANE_POSITION, DEFINE_PLANE_POSITION, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
 }
 
+void MSFS_Manager::SendCameraPositionToSim(SimCameraMessage data)
+{
+	HRESULT hr;
 
+	hr = SimConnect_CameraSetRelative6DOF(currentPtr->hSimConnect, 0.2, -0.5, 1.05, data.Pitch, data.Bank, data.Heading);
+}
 
+void MSFS_Manager::SendCockpitCameraToSim(SimSetCockpitCameraMessage data)
+{
+	HRESULT hr;
 
+	hr = SimConnect_SetDataOnSimObject(currentPtr->hSimConnect, DEFINE_COCKPIT_CAMERA, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(data), &data);
 
-
+	printf("Cockpit State: %d\t", data.State);
+	printf("Reset: %d\t", data.Reset);
+	printf("Zoom: %d\n", data.Zoom);
+}
 
 void MSFS_Manager::SimConnectException(DWORD id)
 {
