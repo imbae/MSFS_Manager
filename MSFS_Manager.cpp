@@ -302,7 +302,7 @@ void MSFS_Manager::SendCameraPositionToSim(SimCameraMessage data)
 {
 	HRESULT hr;
 
-	hr = SimConnect_CameraSetRelative6DOF(currentPtr->hSimConnect, 0.2, -0.5, 1.05, data.Pitch, data.Bank, data.Heading);
+	hr = SimConnect_CameraSetRelative6DOF(currentPtr->hSimConnect, 0.2, -0.5, 1.05, -data.Pitch, -data.Bank, data.Heading);
 }
 
 void MSFS_Manager::SendCockpitCameraToSim(SimSetCockpitCameraMessage data)
