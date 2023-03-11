@@ -91,8 +91,11 @@ void MSFS_Manager::ReceivedFromClient()
 		{
 			switch (messageID)
 			{
-			case (int)SIM_AIRCRAFT:
-				SendPlanePositionToSim(currentPtr->payload.Aircraft);
+			case (int)SIM_AIRCRAFT_POSITION:
+				SendPlanePositionToSim(currentPtr->payload.AircraftPosition);
+				break;
+			case (int)SIM_AIRCRAFT_VELOCITY:
+				SendPlaneVelocityToSim(currentPtr->payload.AircraftVelocity);
 				break;
 			case (int)SIM_CAMERA:
 				SendCameraPositionToSim(currentPtr->payload.Camera);
@@ -147,6 +150,13 @@ void MSFS_Manager::InitSimConnect()
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_POSITION, "PLANE BANK DEGREES", "radians");
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_POSITION, "PLANE HEADING DEGREES MAGNETIC", "radians");
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_POSITION, "AIRSPEED TRUE", "knots");
+
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "VELOCITY BODY Z", "feet/second");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "VELOCITY BODY X", "feet/second");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "VELOCITY BODY Y", "feet/second");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "ROTATION VELOCITY BODY Z", "radians per second");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "ROTATION VELOCITY BODY X", "radians per second");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_PLANE_VELOCITY, "ROTATION VELOCITY BODY Y", "radians per second");
 
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_COCKPIT_CAMERA, "CAMERA STATE", "enum");
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINE_COCKPIT_CAMERA, "CAMERA ACTION COCKPIT VIEW RESET", "bool");
@@ -266,7 +276,7 @@ void MSFS_Manager::DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pC
 		case REQUEST_PLANE_POSITION:
 		{
 			DWORD ObjectID = pObjData->dwObjectID;
-			SimAircraftMessage* pS = (SimAircraftMessage*)&pObjData->dwData;
+			SimAircraftPositionMessage* pS = (SimAircraftPositionMessage*)&pObjData->dwData;
 
 			printf("Lat=%f  Lon=%f  Alt=%f\n", pS->Latitude, pS->Longitude, pS->Altitude);
 			printf("Pitch=%f  Bank=%f  Heading=%f\n", pS->Pitch, pS->Bank, pS->Heading);
@@ -287,7 +297,7 @@ void MSFS_Manager::DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pC
 }
 
 
-void MSFS_Manager::SendPlanePositionToSim(SimAircraftMessage data)
+void MSFS_Manager::SendPlanePositionToSim(SimAircraftPositionMessage data)
 {
 	HRESULT hr;
 
@@ -295,7 +305,16 @@ void MSFS_Manager::SendPlanePositionToSim(SimAircraftMessage data)
 	data.Bank = -data.Bank;	
 
 	hr = SimConnect_SetDataOnSimObject(currentPtr->hSimConnect, DEFINE_PLANE_POSITION, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(data), &data);
+
+	/* Request data from sim */
 	//hr = SimConnect_RequestDataOnSimObject(currentPtr->hSimConnect, REQUEST_PLANE_POSITION, DEFINE_PLANE_POSITION, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+}
+
+void MSFS_Manager::SendPlaneVelocityToSim(SimAircraftVelocityMessage data)
+{
+	HRESULT hr;
+
+	hr = SimConnect_SetDataOnSimObject(currentPtr->hSimConnect, DEFINE_PLANE_VELOCITY, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(data), &data);
 }
 
 void MSFS_Manager::SendCameraPositionToSim(SimCameraMessage data)

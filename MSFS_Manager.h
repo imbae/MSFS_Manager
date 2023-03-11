@@ -50,10 +50,32 @@ typedef struct
 	/// <summary> Heading relative to magnetic north (Radians) </summary>
 	double Heading;
 
-	// <summary> True airspeed (Knots) </summary>
+	/// <summary> True airspeed (Knots) </summary>
 	double Airspeed;
 
-}SimAircraftMessage;
+}SimAircraftPositionMessage;
+
+typedef struct
+{
+	/// <summary> </summary>
+	double zBody_u;
+
+	/// <summary> </summary>
+	double xBody_v;
+
+	/// <summary> </summary>
+	double yBody_w;
+
+	/// <summary> </summary>
+	double zBody_P;
+
+	/// <summary> </summary>
+	double xBody_Q;
+
+	/// <summary> </summary>
+	double yBody_R;
+
+}SimAircraftVelocityMessage;
 
 typedef struct
 {
@@ -85,7 +107,8 @@ union Payload
 {
 	BYTE Data[MAX_BUF_SIZE];
 
-	SimAircraftMessage Aircraft;
+	SimAircraftPositionMessage AircraftPosition;
+	SimAircraftVelocityMessage AircraftVelocity;
 	SimCameraMessage Camera;
 	SimSetCockpitCameraMessage CockpitCamera;
 };
@@ -108,11 +131,13 @@ enum EVENT_ID {
 enum DATA_DEFINE_ID {
 	DEFINE_INIT_POSITION,
 	DEFINE_PLANE_POSITION,
+	DEFINE_PLANE_VELOCITY,
 	DEFINE_COCKPIT_CAMERA
 };
 
 enum DATA_REQUEST_ID {
-	SIM_AIRCRAFT = 0,
+	SIM_AIRCRAFT_POSITION = 0,
+	SIM_AIRCRAFT_VELOCITY,
 	SIM_CAMERA,
 
 	SIM_INIT_HOME_POSITION,
@@ -146,7 +171,8 @@ public:
 	void InitSimConnect();
 	static void DispatchProcSD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext);
 	static void SimConnectDispatch();
-	static void SendPlanePositionToSim(SimAircraftMessage);
+	static void SendPlanePositionToSim(SimAircraftPositionMessage);
+	static void SendPlaneVelocityToSim(SimAircraftVelocityMessage);
 	static void SendCameraPositionToSim(SimCameraMessage);
 	static void SendCockpitCameraToSim(SimSetCockpitCameraMessage);
 	static void SimConnectException(DWORD id);
