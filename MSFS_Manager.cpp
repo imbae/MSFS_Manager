@@ -453,6 +453,28 @@ void MSFS_Manager::SimConnectException(DWORD id)
 }
 
 
+SimCameraMessage MSFS_Manager::GenerateCameraCommand(SimCameraMessage vel)
+{
+	// Generate position command from normalized velocity command (-1 ~ 1)
+
+	// PAN (HEADING)
+	vel.Heading = MAX_SPEED_PAN * vel.Heading;
+	pos.Heading = pos.Heading + (vel.Heading * 3.0 - pre_vel.Heading) * 0.5 * DELTA_T;
+
+	// TILT (PITCH)
+	vel.Pitch = (-1.0 * MAX_SPEED_TILT) * vel.Pitch;
+	pos.Pitch = pos.Heading + (vel.Pitch * 3.0 - pre_vel.Pitch) * 0.5 * DELTA_T;
+
+	if (pos.Pitch >= MAX_RANGE_TILT)		pos.Pitch = MAX_RANGE_TILT;
+	else if (pos.Pitch <= MIN_RANGE_TILT)	pos.Pitch = MIN_RANGE_TILT;
+	
+	// Save the prev. velocity command
+	pre_vel.Heading = vel.Heading;
+	pre_vel.Pitch	= vel.Pitch;
+
+	return pos;
+}
+
 int main()
 {
 	MSFS_Manager* manager = new MSFS_Manager();
