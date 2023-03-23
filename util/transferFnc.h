@@ -9,6 +9,7 @@
 #define _TRANSFERFNC_H_
 
 #include <iostream>
+#include "../common.h"
 
 using namespace std;
 

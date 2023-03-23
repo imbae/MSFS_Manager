@@ -453,9 +453,11 @@ void MSFS_Manager::SimConnectException(DWORD id)
 }
 
 
-SimCameraMessage MSFS_Manager::GenerateCameraCommand(SimCameraMessage vel)
+SimCameraMessage MSFS_Manager::GenerateCameraCommand(SimCameraMessage vel, bool FilterFlag)
 {
-	// Generate position command from normalized velocity command (-1 ~ 1)
+	/* Generate position command from normalized velocity command(-1 ~1) */
+	transferFnc* LPF_PAN  = new transferFnc;
+	transferFnc* LPF_TILT = new transferFnc;
 
 	// PAN (HEADING)
 	vel.Heading = MAX_SPEED_PAN * vel.Heading;
@@ -463,7 +465,7 @@ SimCameraMessage MSFS_Manager::GenerateCameraCommand(SimCameraMessage vel)
 
 	// TILT (PITCH)
 	vel.Pitch = (-1.0 * MAX_SPEED_TILT) * vel.Pitch;
-	pos.Pitch = pos.Heading + (vel.Pitch * 3.0 - pre_vel.Pitch) * 0.5 * DELTA_T;
+	pos.Pitch = pos.Pitch + (vel.Pitch * 3.0 - pre_vel.Pitch) * 0.5 * DELTA_T;
 
 	if (pos.Pitch >= MAX_RANGE_TILT)		pos.Pitch = MAX_RANGE_TILT;
 	else if (pos.Pitch <= MIN_RANGE_TILT)	pos.Pitch = MIN_RANGE_TILT;
@@ -471,6 +473,21 @@ SimCameraMessage MSFS_Manager::GenerateCameraCommand(SimCameraMessage vel)
 	// Save the prev. velocity command
 	pre_vel.Heading = vel.Heading;
 	pre_vel.Pitch	= vel.Pitch;
+
+	if (FilterFlag)
+	{
+		LPF_PAN->SetCutoffFrequency(1.0);
+		LPF_PAN->SetDampingRatio(1.0);
+		LPF_PAN->MakeFilterTransferFunction(transferFnc::eLPF_2ndOrder);
+		LPF_PAN->SetInputData(pos.Heading);
+		pos.Heading = LPF_PAN->Update();
+
+		LPF_TILT->SetCutoffFrequency(1.0);
+		LPF_TILT->SetDampingRatio(1.0);
+		LPF_TILT->MakeFilterTransferFunction(transferFnc::eLPF_2ndOrder);
+		LPF_TILT->SetInputData(pos.Pitch);
+		pos.Pitch = LPF_TILT->Update();
+	}
 
 	return pos;
 }

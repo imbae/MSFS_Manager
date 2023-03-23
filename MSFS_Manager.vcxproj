@@ -145,10 +145,13 @@
   <ItemGroup>
     <ClCompile Include="crc16.cpp" />
     <ClCompile Include="MSFS_Manager.cpp" />
+    <ClCompile Include="util\transferFnc.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="crc16.h" />
     <ClInclude Include="MSFS_Manager.h" />
+    <ClInclude Include="util\transferFnc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

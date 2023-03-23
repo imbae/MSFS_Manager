@@ -69,7 +69,6 @@ bool transferFnc::Load(void)
 
 bool transferFnc::Update(void)
 {
-
     dOutput = dInput * dCa + dPrevInput1 * dCb + dPrevInput2 * dCc
         - dPrevOutput1 * dCd - dPrevOutput2 * dCe;
 
